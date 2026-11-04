@@ -10,6 +10,7 @@ public class HushService extends NotificationListenerService {
 
     @Override
     public void onListenerConnected() {
+        Digest.ensure(this);
         try {
             StatusBarNotification[] active = getActiveNotifications();
             if (active != null) {

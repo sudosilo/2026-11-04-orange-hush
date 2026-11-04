@@ -113,6 +113,43 @@ public class Store extends SQLiteOpenHelper {
         return out;
     }
 
+    public int digestMode() {
+        return prefs.getInt("digest_mode", 0);
+    }
+
+    public void setDigestMode(int mode) {
+        prefs.edit().putInt("digest_mode", mode).apply();
+    }
+
+    public long lastDigest() {
+        return prefs.getLong("last_digest", 0L);
+    }
+
+    public void setLastDigest(long ts) {
+        prefs.edit().putLong("last_digest", ts).apply();
+    }
+
+    public synchronized List<LogRow> since(long ts, int limit) {
+        List<LogRow> out = new ArrayList<LogRow>();
+        SQLiteDatabase db = getReadableDatabase();
+        Cursor c = db.rawQuery(
+                "SELECT ts, app, title, body FROM log WHERE ts > ? ORDER BY id DESC LIMIT " + limit,
+                new String[]{String.valueOf(ts)});
+        try {
+            while (c.moveToNext()) {
+                LogRow r = new LogRow();
+                r.ts = c.getLong(0);
+                r.app = c.getString(1);
+                r.title = c.getString(2);
+                r.body = c.getString(3);
+                out.add(r);
+            }
+        } finally {
+            c.close();
+        }
+        return out;
+    }
+
     public synchronized void clearLog() {
         getWritableDatabase().execSQL("DELETE FROM log");
         lastKey = "";

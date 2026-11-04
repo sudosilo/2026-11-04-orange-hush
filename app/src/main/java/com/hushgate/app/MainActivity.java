@@ -7,6 +7,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.service.notification.NotificationListenerService;
@@ -15,12 +16,16 @@ import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.Switch;
+import android.widget.Toast;
 import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
@@ -101,6 +106,52 @@ public class MainActivity extends Activity {
         all.setOnCheckedChangeListener((b, c) -> store.setBlockAll(c));
         all.setPadding(0, dp(8), 0, dp(8));
         root.addView(all);
+
+        LinearLayout digestRow = new LinearLayout(this);
+        digestRow.setOrientation(LinearLayout.HORIZONTAL);
+        digestRow.setGravity(Gravity.CENTER_VERTICAL);
+        digestRow.addView(text("Digest", 16, false));
+        Spinner digest = new Spinner(this);
+        digest.setAdapter(new ArrayAdapter<String>(
+                this, android.R.layout.simple_spinner_item, Digest.LABELS));
+        digest.setSelection(store.digestMode());
+        digest.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                int old = store.digestMode();
+                if (pos == old) {
+                    return;
+                }
+                store.setDigestMode(pos);
+                if (old == 0) {
+                    store.setLastDigest(System.currentTimeMillis());
+                }
+                Digest.schedule(MainActivity.this);
+                if (pos > 0 && Build.VERSION.SDK_INT >= 33
+                        && checkSelfPermission("android.permission.POST_NOTIFICATIONS")
+                        != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 7);
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        LinearLayout.LayoutParams spinParams =
+                new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        spinParams.leftMargin = dp(12);
+        digestRow.addView(digest, spinParams);
+        Button sendNow = new Button(this);
+        sendNow.setText("Send now");
+        sendNow.setOnClickListener(v -> {
+            String problem = Digest.post(this);
+            if (problem != null) {
+                Toast.makeText(this, problem, Toast.LENGTH_SHORT).show();
+            }
+        });
+        digestRow.addView(sendNow);
+        root.addView(digestRow);
 
         LinearLayout tabs = new LinearLayout(this);
         tabs.setOrientation(LinearLayout.HORIZONTAL);
@@ -190,7 +241,7 @@ public class MainActivity extends Activity {
         };
 
         setContentView(root);
-        setTab(false);
+        setTab("held".equals(getIntent().getStringExtra("tab")));
         loadApps();
     }
 
