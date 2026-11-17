@@ -129,6 +129,22 @@ public class Store extends SQLiteOpenHelper {
         prefs.edit().putLong("last_digest", ts).apply();
     }
 
+    public boolean clockLock() {
+        return prefs.getBoolean("clock_lock", false);
+    }
+
+    public void setClockLock(boolean v) {
+        prefs.edit().putBoolean("clock_lock", v).apply();
+    }
+
+    public String clockZone() {
+        return prefs.getString("clock_zone", "America/Los_Angeles");
+    }
+
+    public void setClockZone(String zone) {
+        prefs.edit().putString("clock_zone", zone).apply();
+    }
+
     public synchronized List<LogRow> since(long ts, int limit) {
         List<LogRow> out = new ArrayList<LogRow>();
         SQLiteDatabase db = getReadableDatabase();

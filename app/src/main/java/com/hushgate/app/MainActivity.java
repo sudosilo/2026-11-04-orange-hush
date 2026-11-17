@@ -46,6 +46,7 @@ public class MainActivity extends Activity {
     private TextView status;
     private Button accessBtn;
     private Button clearBtn;
+    private TextView clockStatus;
     private EditText search;
     private ListView list;
     private boolean showLog = false;
@@ -153,6 +154,60 @@ public class MainActivity extends Activity {
         digestRow.addView(sendNow);
         root.addView(digestRow);
 
+        TextView clockHead = text("Clock lock", 16, true);
+        clockHead.setTextColor(0xFF1E6FFF);
+        clockHead.setPadding(0, dp(10), 0, 0);
+        root.addView(clockHead);
+
+        LinearLayout clockRow = new LinearLayout(this);
+        clockRow.setOrientation(LinearLayout.HORIZONTAL);
+        clockRow.setGravity(Gravity.CENTER_VERTICAL);
+        Switch lock = new Switch(this);
+        lock.setText("Hold clock on");
+        lock.setTextColor(0xFF111111);
+        lock.setChecked(store.clockLock());
+        lock.setOnCheckedChangeListener((b, c) -> {
+            store.setClockLock(c);
+            ClockLock.start(this);
+            refreshClock();
+        });
+        clockRow.addView(lock);
+        Spinner zone = new Spinner(this);
+        zone.setAdapter(new ArrayAdapter<String>(
+                this, android.R.layout.simple_spinner_item, ClockLock.ZONE_LABELS));
+        int zi = 0;
+        for (int i = 0; i < ClockLock.ZONE_IDS.length; i++) {
+            if (ClockLock.ZONE_IDS[i].equals(store.clockZone())) {
+                zi = i;
+            }
+        }
+        zone.setSelection(zi);
+        zone.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                if (ClockLock.ZONE_IDS[pos].equals(store.clockZone())) {
+                    return;
+                }
+                store.setClockZone(ClockLock.ZONE_IDS[pos]);
+                ClockLock.start(MainActivity.this);
+                refreshClock();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+        LinearLayout.LayoutParams zoneParams =
+                new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        zoneParams.leftMargin = dp(12);
+        clockRow.addView(zone, zoneParams);
+        root.addView(clockRow);
+
+        clockStatus = text("", 12, false);
+        clockStatus.setTextColor(0xFF1E6FFF);
+        clockStatus.setSingleLine(true);
+        root.addView(clockStatus);
+
         LinearLayout tabs = new LinearLayout(this);
         tabs.setOrientation(LinearLayout.HORIZONTAL);
         Button appsTab = new Button(this);
@@ -258,10 +313,17 @@ public class MainActivity extends Activity {
                 // ignore
             }
         }
+        ClockLock.start(this);
+        refreshClock();
         if (showLog) {
             logRows = store.recent(500);
             adapter.notifyDataSetChanged();
         }
+    }
+
+    private void refreshClock() {
+        String perm = ClockLock.canWrite(this) ? "Lock permission granted" : "Lock permission missing";
+        clockStatus.setText(perm + ". Clock on " + ClockLock.currentZone());
     }
 
     private boolean accessOn() {
