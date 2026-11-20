@@ -129,6 +129,8 @@ public class ClockFixer extends AccessibilityService {
             AccessibilityNodeInfo n = exact(root, "Automatic time zone");
             if (n != null) {
                 click(n);
+                h.postDelayed(this::tick, TICK * 3);
+                return;
             } else {
                 scroll(root);
             }

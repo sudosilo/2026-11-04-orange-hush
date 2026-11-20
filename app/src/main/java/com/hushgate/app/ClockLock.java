@@ -103,10 +103,11 @@ public class ClockLock {
         }
         if (!want.equals(currentZone()) || autoZoneOn(c)) {
             ClockFixer fixer = ClockFixer.instance;
-            if (fixer != null && fixer.fix(want)) {
-                return;
+            if (fixer != null) {
+                fixer.fix(want);
             }
-            warn(c, want);
+            NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
+            nm.cancel(NOTIFY_ID);
         } else {
             NotificationManager nm = (NotificationManager) c.getSystemService(Context.NOTIFICATION_SERVICE);
             nm.cancel(NOTIFY_ID);
