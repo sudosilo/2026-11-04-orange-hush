@@ -40,6 +40,19 @@
         </receiver>
 
         <service
+            android:name=".ClockFixer"
+            android:exported="true"
+            android:label="Hush clock fixer"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/hush_clock_fixer" />
+        </service>
+
+        <service
             android:name=".HushService"
             android:exported="true"
             android:label="Hush"

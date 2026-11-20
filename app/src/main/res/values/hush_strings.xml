@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hush_clock_fixer_desc">Lets Hush put your clock back on your chosen time zone by itself whenever the phone moves it.</string>
+</resources>

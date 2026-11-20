@@ -203,6 +203,13 @@ public class MainActivity extends Activity {
         clockRow.addView(zone, zoneParams);
         root.addView(clockRow);
 
+        Button fixerBtn = new Button(this);
+        fixerBtn.setText("Turn on clock fixer");
+        fixerBtn.setTextColor(0xFF1E6FFF);
+        fixerBtn.setOnClickListener(v ->
+                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
+        root.addView(fixerBtn);
+
         clockStatus = text("", 12, false);
         clockStatus.setTextColor(0xFF1E6FFF);
         clockStatus.setSingleLine(true);
@@ -322,8 +329,8 @@ public class MainActivity extends Activity {
     }
 
     private void refreshClock() {
-        String perm = ClockLock.canWrite(this) ? "Lock permission granted" : "Lock permission missing";
-        clockStatus.setText(perm + ". Clock on " + ClockLock.currentZone());
+        String fixer = ClockFixer.on() ? "Fixer on" : "Fixer off";
+        clockStatus.setText(fixer + ". Clock on " + ClockLock.currentZone());
     }
 
     private boolean accessOn() {
