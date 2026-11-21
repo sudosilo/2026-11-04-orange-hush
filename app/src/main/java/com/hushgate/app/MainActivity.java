@@ -57,6 +57,7 @@ public class MainActivity extends Activity {
     private TextView allPill;
     private TextView lockPill;
     private TextView fixerPill;
+    private boolean fixerUnlockShown = false;
     private TextView clockNow;
     private TextView appsTab;
     private TextView heldTab;
@@ -262,8 +263,19 @@ public class MainActivity extends Activity {
         root.addView(zoneRow);
 
         fixerPill = pill();
-        fixerPill.setOnClickListener(v ->
-                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)));
+        fixerPill.setOnClickListener(v -> {
+            if (!ClockFixer.on() && !fixerUnlockShown) {
+                fixerUnlockShown = true;
+                Intent info = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                        android.net.Uri.parse("package:" + getPackageName()));
+                Toast.makeText(this, "Top right menu, Allow restricted settings, then come back and tap Clock fixer again",
+                        Toast.LENGTH_LONG).show();
+                startActivity(info);
+            } else {
+                fixerUnlockShown = false;
+                startActivity(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
+            }
+        });
         root.addView(row("Clock fixer", fixerPill));
 
         clockNow = text("", 14, true);
