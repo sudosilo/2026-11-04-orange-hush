@@ -3,10 +3,15 @@ package com.hushgate.app;
 import android.app.Notification;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
 public class HushService extends NotificationListenerService {
+
+    private static final long WEEK = 7L * 24L * 3600L * 1000L;
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     public void onListenerConnected() {
@@ -52,11 +57,7 @@ public class HushService extends NotificationListenerService {
         String title = str(n.extras, Notification.EXTRA_TITLE);
         String body = str(n.extras, Notification.EXTRA_TEXT);
 
-        try {
-            cancelNotification(sbn.getKey());
-        } catch (Exception e) {
-            // some system notifications refuse removal
-        }
+        suppress(sbn.getKey());
 
         if (foreground || (title.isEmpty() && body.isEmpty())) {
             return;
@@ -69,6 +70,47 @@ public class HushService extends NotificationListenerService {
             // keep package name as label
         }
         store.log(pkg, app, title, body);
+    }
+
+    /**
+     * Cancel first. Pinned system notifications such as Samsung App update refuse a plain
+     * cancel, so if the notification is still showing a moment later it is snoozed for a
+     * week, and snoozed again each time the owner app posts it back.
+     */
+    private void suppress(final String key) {
+        try {
+            cancelNotification(key);
+        } catch (Exception e) {
+            // some system notifications refuse removal
+        }
+        handler.postDelayed(() -> {
+            if (!stillShown(key)) {
+                return;
+            }
+            try {
+                snoozeNotification(key, WEEK);
+            } catch (Exception e) {
+                // snooze refused too
+            }
+            handler.postDelayed(() -> {
+                if (stillShown(key)) {
+                    try {
+                        cancelNotification(key);
+                    } catch (Exception e) {
+                        // nothing more Android allows here
+                    }
+                }
+            }, 1500);
+        }, 400);
+    }
+
+    private boolean stillShown(String key) {
+        try {
+            StatusBarNotification[] found = getActiveNotifications(new String[]{key});
+            return found != null && found.length > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private static String str(Bundle extras, String key) {
