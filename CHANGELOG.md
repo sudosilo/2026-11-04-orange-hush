@@ -1,5 +1,7 @@
 Hush changelog
 
+2026-11-23, v2026.11.23. Blocked notifications that refuse a plain cancel are now snoozed instead.
+
 2026-11-20, v2026.11.20b. Tapping the Clock fixer badge while the fixer is off now opens the Hush app info page first, where Samsung's restricted setting gets unlocked, and the next tap opens the accessibility screen to switch the fixer on.
 
 2026-11-20, v2026.11.20. Clock lock no longer posts any pop-up. When the clock moves off the chosen zone, the clock fixer puts it back silently. The fixer now waits after flipping automatic time zone off so it never flips it back on by a second tap.
